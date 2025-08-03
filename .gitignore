@@ -8,10 +8,13 @@ __pycache__/
 *.pyc
 *.egg-info/
 *.egg
+.env
 dist/
 build/
 venv/
 aurum-env/
+*.log
+*.db
 env/
 .env
 
