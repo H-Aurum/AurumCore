@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AurumCore - Painel de Controle</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="AurumCore Logo">
+            <h1>Painel de Controle AurumCore</h1>
+        </header>
+
+        <section class="obs-controls">
+            <h2>Controle OBS</h2>
+            <div class="scenes">
+                <button class="scene-btn" data-scene="Gameplay">Gameplay</button>
+                <button class="scene-btn" data-scene="Camera">Câmera</button>
+                <button class="scene-btn" data-scene="Pausa">Tela de Pausa</button>
+            </div>
+            
+            <div class="sources">
+                <button class="source-btn" data-source="Mic" data-action="toggle">Microfone</button>
+                <button class="source-btn" data-source="Webcam" data-action="toggle">Webcam</button>
+            </div>
+        </section>
+
+        <section class="moderation">
+            <h2>Moderação</h2>
+            <div class="moderation-actions">
+                <button id="ban-btn">Banir Usuário</button>
+                <button id="timeout-btn">Timeout (5 min)</button>
+                <button id="clear-chat">Limpar Chat</button>
+            </div>
+            
+            <div class="chat-container">
+                <div id="chat-messages"></div>
+            </div>
+        </section>
+
+        <section class="voice-control">
+            <h2>Controle por Voz</h2>
+            <button id="voice-btn">
+                <span>🎤</span> Pressione para falar
+            </button>
+            <div id="voice-response"></div>
+        </section>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
