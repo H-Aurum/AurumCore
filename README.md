@@ -63,7 +63,7 @@ AurumCore é um sistema de inteligência artificial para moderação e assistên
 Para contribuir:
 
 ```bash
-git clone https://github.com/seuusuario/AurumCore.git
+git clone https://github.com/H-Aurum/AurumCore.git
 cd AurumCore
 python -m venv venv
 venv\Scripts\activate
