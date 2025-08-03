@@ -1,4 +1,8 @@
-@echo off
+@echo off@
+echo Iniciando AurumCore...
+call aurum-env\Scripts\activate
+python -m aurumcore.core
+pause
 title AurumCore - IA para Streamers
 echo Starting AurumCore...
 
