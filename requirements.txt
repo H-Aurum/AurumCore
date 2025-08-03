@@ -6,5 +6,5 @@ transformers
 torch
 numpy
 scipy
+sounddevice
 python-speech-features
-pyaudio
