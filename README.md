@@ -1,6 +1,7 @@
 # AurumCore - IA de Moderação para Streamers
 
 
+
 AurumCore é um sistema de inteligência artificial para moderação e assistência em transmissões ao vivo, integrado com OBS Studio e plataformas de streaming.
 
 ## Recursos Principais
@@ -18,7 +19,7 @@ AurumCore é um sistema de inteligência artificial para moderação e assistên
 
 2. **Instalação**:
    ```powershell
-   git clone https://github.com/seuusuario/AurumCore.git
+   git clone https://github.com/H-Aurum/AurumCore.git
    cd AurumCore
    scripts\install_windows.bat
    ```
@@ -71,3 +72,5 @@ pip install -r requirements.txt
 python -m aurumcore.core
 ```
 
+## Licença
+Este projeto está licenciado sob a GNU GPLv3. Veja [LICENSE](LICENSE) para detalhes.
