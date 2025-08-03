@@ -1,0 +1,10 @@
+obs-websocket-py
+flask
+python-dotenv
+twitchio
+transformers
+torch
+numpy
+scipy
+python-speech-features
+pyaudio
