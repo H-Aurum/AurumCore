@@ -1,0 +1,33 @@
+AurumCore/
+├── aurumcore/
+│   ├── __init__.py
+│   ├── core.py
+│   ├── obs_integration.py
+│   ├── ai_models.py
+│   ├── twitch_integration.py
+│   ├── utils.py
+│   └── web_interface.py
+├── config/
+│   ├── default.json
+│   └── obs_profiles/
+├── models/
+│   └── behavior/
+├── static/
+│   ├── css/
+│   │   └── main.css
+│   ├── js/
+│   │   └── main.js
+│   └── images/
+├── templates/
+│   ├── index.html
+│   ├── dashboard.html
+│   └── overlay.html
+├── scripts/
+│   ├── install_windows.bat
+│   ├── start.bat
+│   └── setup_obs.py
+├── requirements.txt
+├── .env.example
+├── .gitignore
+├── LICENSE
+└── README.md
