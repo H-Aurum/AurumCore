@@ -2,14 +2,28 @@ import os
 import json
 import time
 import threading
+import logging
 from dotenv import load_dotenv
 from .obs_integration import OBSController
 from .ai_models import BehaviorModel, ModerationModel
 from .twitch_integration import TwitchChatListener
 from .web_interface import run_web_server
 
+# Configurar logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler("aurumcore.log")
+    ]
+)
+
 class AurumCore:
     def __init__(self, config_path="config/default.json"):
+        self.logger = logging.getLogger('core')
+        self.logger.info("Initializing AurumCore...")
+        
         load_dotenv()
         self.config = self.load_config(config_path)
         self.obs = OBSController(
@@ -20,104 +34,144 @@ class AurumCore:
         self.behavior_model = BehaviorModel()
         self.moderation_model = ModerationModel()
         self.running = False
+        self.twitch_active = False
+        self.ai_loaded = False
         self.profile = self.load_profile()
         
     def load_config(self, path):
         try:
             with open(path, 'r') as f:
+                self.logger.info(f"Loaded config from {path}")
                 return json.load(f)
-        except:
+        except Exception as e:
+            self.logger.warning(f"Config load error: {str(e)}. Using defaults.")
             return {
                 "learning_rate": 0.001,
-                "update_interval": 300
+                "update_interval": 300,
+                "min_toxicity": 0.7
             }
     
     def load_profile(self):
         profile_path = "config/streamer_profile.json"
-        if os.path.exists(profile_path):
-            with open(profile_path, 'r') as f:
-                return json.load(f)
+        try:
+            if os.path.exists(profile_path):
+                with open(profile_path, 'r') as f:
+                    profile = json.load(f)
+                    self.logger.info("Loaded streamer profile")
+                    return profile
+        except Exception as e:
+            self.logger.error(f"Profile load error: {str(e)}")
+            
+        self.logger.info("Created new streamer profile")
         return {
             "communication_style": {"formal": 0.5, "humorous": 0.3, "technical": 0.2},
-            "moderation_preferences": {"strictness": 0.7}
+            "moderation_preferences": {"strictness": 0.7},
+            "blocked_words": []
         }
     
     def save_profile(self):
-        with open("config/streamer_profile.json", 'w') as f:
-            json.dump(self.profile, f)
+        try:
+            with open("config/streamer_profile.json", 'w') as f:
+                json.dump(self.profile, f, indent=2)
+            return True
+        except Exception as e:
+            self.logger.error(f"Profile save error: {str(e)}")
+            return False
     
     def start(self):
         if self.running:
             return
             
+        self.logger.info("Starting AurumCore services...")
         self.running = True
-        print("Starting AurumCore...")
         
         # Conectar ao OBS
         if not self.obs.connect():
-            print("OBS connection failed")
+            self.logger.error("Failed to connect to OBS")
         
-        # Iniciar modelos de IA
-        self.behavior_model.load()
-        self.moderation_model.load()
+        # Carregar modelos de IA
+        self.ai_loaded = self.behavior_model.load() and self.moderation_model.load()
+        if not self.ai_loaded:
+            self.logger.warning("Some AI models failed to load")
         
         # Iniciar listener do Twitch
-        self.twitch_listener = TwitchChatListener(
-            os.getenv('TWITCH_CHANNEL'),
-            os.getenv('TWITCH_TOKEN')
-        )
-        self.twitch_listener.start(self.handle_message)
+        twitch_token = os.getenv('TWITCH_TOKEN')
+        twitch_channel = os.getenv('TWITCH_CHANNEL')
+        
+        if twitch_token and twitch_channel:
+            self.twitch_listener = TwitchChatListener(
+                token=twitch_token,
+                channel=twitch_channel,
+                callback=self.handle_message
+            )
+            self.twitch_active = self.twitch_listener.start_listener()
+        else:
+            self.logger.warning("Twitch credentials not configured")
         
         # Iniciar servidor web
-        web_thread = threading.Thread(target=run_web_server, args=(self,))
-        web_thread.daemon = True
-        web_thread.start()
+        run_web_server(self)
         
         # Thread de aprendizado contínuo
         learning_thread = threading.Thread(target=self.continuous_learning)
         learning_thread.daemon = True
         learning_thread.start()
         
-        print("AurumCore started successfully!")
+        self.logger.info("AurumCore started successfully")
     
-    def handle_message(self, user, message):
-        # Análise de moderação
-        toxicity = self.moderation_model.predict(message)
-        if toxicity > self.profile["moderation_preferences"]["strictness"]:
-            print(f"Moderating message from {user}: {message}")
-            self.obs.show_overlay(f"Moderated: {user}")
-            # Aqui você pode adicionar ação como timeout/ban
+    def handle_message(self, message_data):
+        try:
+            user = message_data['user']
+            message = message_data['message']
             
-        # Aprendizado do comportamento
-        self.behavior_model.adapt(message, self.profile)
+            # Análise de moderação
+            toxicity = self.moderation_model.predict(message)
+            min_toxicity = self.config.get('min_toxicity', 0.7)
+            
+            if toxicity > min_toxicity:
+                self.logger.info(f"Moderating toxic message ({toxicity:.2f}) from {user}: {message}")
+                self.obs.show_overlay(f"Moderado: {user}", duration=3)
+                # Aqui você pode adicionar ação como timeout/ban
+                
+            # Aprendizado do comportamento
+            self.behavior_model.adapt(message, self.profile)
+        except Exception as e:
+            self.logger.error(f"Message handling error: {str(e)}")
     
     def continuous_learning(self):
+        self.logger.info("Continuous learning started")
         while self.running:
             try:
-                # Atualizar modelos periodicamente
-                self.behavior_model.update()
-                self.save_profile()
                 time.sleep(self.config["update_interval"])
+                self.save_profile()
             except Exception as e:
-                print(f"Learning error: {str(e)}")
+                self.logger.error(f"Learning error: {str(e)}")
     
     def process_voice_command(self, command):
-        response = self.behavior_model.generate_response(command)
-        print(f"Voice command: {command} -> Response: {response}")
-        # Implementar ações com base no comando
-        if "mudar cena" in command.lower():
-            scene = command.split("para")[-1].strip()
-            self.obs.switch_scene(scene)
-            return f"Mudando para cena: {scene}"
-        return response
+        try:
+            if not command.strip():
+                return "Comando não reconhecido"
+                
+            response = self.behavior_model.generate_response(
+                command, 
+                self.profile
+            )
+            self.logger.info(f"Voice command: '{command}' -> Response: '{response}'")
+            return response
+        except Exception as e:
+            self.logger.error(f"Voice command error: {str(e)}")
+            return "Erro no processamento do comando"
+
+    def stop(self):
+        self.logger.info("Stopping AurumCore...")
+        self.running = False
+        self.obs.disconnect()
+        self.logger.info("AurumCore stopped")
 
 if __name__ == "__main__":
     aurum = AurumCore()
-    aurum.start()
-    
     try:
+        aurum.start()
         while aurum.running:
             time.sleep(1)
     except KeyboardInterrupt:
-        aurum.running = False
-        print("Stopping AurumCore...")
+        aurum.stop()
