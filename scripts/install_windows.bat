@@ -16,7 +16,7 @@ call aurum-env\Scripts\activate
 
 :: Install dependencies
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
-pip install obs-websocket-py transformers numpy flask python-dotenv twitchio
+pip install obs-websocket-py transformers numpy flask python-dotenv twitchio sounddevice
 
 :: Setup config
 if not exist config mkdir config
