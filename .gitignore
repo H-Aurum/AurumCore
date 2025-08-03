@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pyz
+*.pyw
+*.pyc
+*.egg-info/
+*.egg
+dist/
+build/
+venv/
+aurum-env/
+env/
+.env
+
+# Logs
+*.log
+logs/
+
+# System
+.DS_Store
+Thumbs.db
+
+# OBS
+/profiles/
+/scenes/
+
+# IDEs
+.vscode/
+.idea/
+
+# Cache
+.cache/
+
+# Temp files
+*.tmp
+*.bak
